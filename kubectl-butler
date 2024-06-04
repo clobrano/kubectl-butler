@@ -4,31 +4,33 @@
 ## provide name or namespace manually.
 ## 
 ## usage:
-##      $ kk <kind> [--namespace <namespace> --selector <selector> ]
+##      $ kubectl-butler <kind> [--namespace <namespace> --selector <selector> ]
 ## 
 ## or just
-##      $ kk
+##      $ kubectl-butler
 ## 
-## to select one of the 10 last commands run by kk
+## to select one of the last commands run by kubectl-butler
 ## 
-## kk works in three stesp:
+## kubectl-butler works in three stesp:
 ## 1. Get all the cluster resources of <kind> (or the ones under --namespace if provided) and let
 ##    you fuzzy search a specific one, getting its name, and namespace if any.
 ## 2. Select one of the usual kubectl verbs (get, logs, describe, ...) and compose the command line
 ## 3. Give you a chance to edit the command line, adding more flags or, e.g., pipe the result to
 ##    another program.
 ## 
-## The final command line is executed and stored under $HOME/.kk.lastcommands together with the
+## The final command line is executed and stored under $HOME/.kb.lastcommands together with the
 ## last 10 unique commands issued.
 ## 
 ## options:
-##      -n, --namespace <namespace> The namespace into which kk will look for the resources [default: --all-namespaces]
+##      -n, --namespace <namespace> The namespace into which kubectl-butler will look for the resources [default: --all-namespaces]
 ##      -s, --selector <selector>   Selector (label query) to filter on
-##      -c, --clean                 Clean $HOME/.kk.lastcommands history
+##      -c, --clean                 Clean $HOME/.kb.lastcommands history
 
-# get the positional arguments first
-kind=$1
-shift
+# get the positional arguments first unless it's --help
+if [[ $1 != "--help" ]] && [[ $1 != "-h" ]]; then
+    kind=$1
+    shift
+fi
 
 # then parse flags
 # CLInt GENERATED_CODE: start
@@ -43,6 +45,7 @@ for arg in "$@"; do
 "--namespace") set -- "$@" "-n";;
 "--selector") set -- "$@" "-s";;
 "--clean") set -- "$@" "-c";;
+"--help") set -- "$@" "-h";;
   *) set -- "$@" "$arg"
   esac
 done
@@ -169,7 +172,7 @@ logs            Print the logs for a container in a pod
 fi
 
 echo "executing: $cmd"
-echo -n "[+] Edit the command before execute (y/n)? "
+echo -n "[+] Type 'y' and ENTER, to edit the command before execute or just ENTER to continue: "
 read res
 if [[ ${res} == "y" ]]; then
     if [[ -z $EDITOR ]]; then

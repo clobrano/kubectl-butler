@@ -71,17 +71,21 @@ while getopts 'hcn:s:' OPT; do
 done
 # CLInt GENERATED_CODE: end
 
-
-KK_LASTCMDS=$HOME/.kk.lastcommands
+KB_LASTCOMMANDS=$HOME/.kb.lastcommands
 
 if [[ -n ${_clean} ]]; then
-    echo > ${KK_LASTCMDS}
+    echo > ${KB_LASTCOMMANDS}
     exit 0
 fi
 
 if [[ -z ${kind} ]]; then
-    echo "[+] repeating command from history (${KK_LASTCMDS}) "
-    cmd=$(cat ${KK_LASTCMDS} | \
+    if [[ ! -f ${KB_LASTCOMMANDS} ]] || [[ $(cat ${KB_LASTCOMMANDS} | wc --lines) -eq 0 ]]; then
+        echo "[!] Cannot repeat last command: history is empty."
+        exit 0
+    fi
+
+    echo "[+] repeating command from history (${KB_LASTCOMMANDS}) "
+    cmd=$(cat ${KB_LASTCOMMANDS} | \
         fzf --prompt "Search and Select: " \
             --header=$'You can edit the command after selection\n\n' \
             --border \
@@ -188,9 +192,9 @@ fi
 [[ -z ${cmd} ]] && exit 0
 
 echo "executing: $cmd"
-echo "$cmd" >> ${KK_LASTCMDS}
+echo "$cmd" >> ${KB_LASTCOMMANDS}
 eval "$cmd"
-# Only keep the last unique 10 commands in KK_LASTCMDS file
-tac ${KK_LASTCMDS} | uniq -u | head -10 > ${KK_LASTCMDS}.tmp
-cat ${KK_LASTCMDS}.tmp > ${KK_LASTCMDS}
-echo "[+] $(cat ${KK_LASTCMDS} | wc -l) last commands available in ${KK_LASTCMDS}"
+# Only keep the last unique 10 commands in KB_LASTCOMMANDS file
+tac ${KB_LASTCOMMANDS} | uniq -u | head -50 > ${KB_LASTCOMMANDS}.tmp
+cat ${KB_LASTCOMMANDS}.tmp > ${KB_LASTCOMMANDS}
+echo "[+] $(cat ${KB_LASTCOMMANDS} | wc -l) last commands available in ${KB_LASTCOMMANDS}"

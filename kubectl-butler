@@ -145,13 +145,12 @@ else
     fi
 
     # supported kubectl actions (do not change indentation)
-    supported_actions="
-delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
+    supported_actions="get             Display one or many resources
+logs            Print the logs for a container in a pod
 describe        Show details of a specific resource or group of resources
 edit            Edit a resource on the server
 explain         Get documentation for a resource
-get             Display one or many resources
-logs            Print the logs for a container in a pod
+delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
 "
 
     # Select the action via FZF

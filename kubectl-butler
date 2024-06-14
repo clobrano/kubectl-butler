@@ -71,21 +71,22 @@ while getopts 'hcn:s:' OPT; do
 done
 # CLInt GENERATED_CODE: end
 
-KB_LASTCOMMANDS=$HOME/.kb.lastcommands
+KB_HISTORY_FILENAME=$HOME/.kb.lastcommands
+KB_HISTORY_LEN=30
 
 if [[ -n ${_clean} ]]; then
-    echo > ${KB_LASTCOMMANDS}
+    echo > ${KB_HISTORY_FILENAME}
     exit 0
 fi
 
 if [[ -z ${kind} ]]; then
-    if [[ ! -f ${KB_LASTCOMMANDS} ]] || [[ $(cat ${KB_LASTCOMMANDS} | wc --lines) -eq 0 ]]; then
+    if [[ ! -f ${KB_HISTORY_FILENAME} ]] || [[ $(cat ${KB_HISTORY_FILENAME} | wc --lines) -eq 0 ]]; then
         echo "[!] Cannot repeat last command: history is empty."
         exit 0
     fi
 
-    echo "[+] repeating command from history (${KB_LASTCOMMANDS}) "
-    cmd=$(cat ${KB_LASTCOMMANDS} | \
+    echo "[+] repeating command from history (${KB_HISTORY_FILENAME}) "
+    cmd=$(tac ${KB_HISTORY_FILENAME} | \
         fzf --prompt "Search and Select: " \
             --header=$'You can edit the command after selection\n\n' \
             --border \
@@ -174,26 +175,38 @@ delete          Delete resources by file names, stdin, resources and names, or b
     fi
 fi
 
-echo "executing: $cmd"
-echo -n "[+] Type 'y' and ENTER, to edit the command before execute or just ENTER to continue: "
+if [[ "$#" -gt 0 ]]; then
+    echo "[+] command history is stored in ${KB_HISTORY_FILENAME}. Run $0 without arguments to select an old command."
+fi
+
+# most of the times I want --follow in logs
+if [[ ${action} == "logs" ]]; then
+    cmd="${cmd} --follow"
+fi
+
+echo -e "[+] command will be: \e[4m$cmd\e[0m"
+echo -en "[+] type \e[4my and then ENTER\e[0m, to edit the command before execute or just \e[4mENTER\e[0m to continue: "
 read res
 if [[ ${res} == "y" ]]; then
     if [[ -z $EDITOR ]]; then
         set -e
-        echo "[!] EDITOR environment variable not found. Trying with vim"
-        EDITOR=vim
+        echo "[!] EDITOR environment variable not found. Trying with nano"
+        EDITOR=nano
     fi
     echo $cmd > /tmp/kk.lastcommand
     $EDITOR /tmp/kk.lastcommand
     cmd=$(cat /tmp/kk.lastcommand)
 fi
 
+# exit if no command is created
 [[ -z ${cmd} ]] && exit 0
 
+
 echo "executing: $cmd"
-echo "$cmd" >> ${KB_LASTCOMMANDS}
+
+# Keep the last $KB_HISTORY_LEN commands in KB_HISTORY_FILENAME file
+echo "$cmd" >> ${KB_HISTORY_FILENAME}
+cat ${KB_HISTORY_FILENAME} | uniq -u | tail -$KB_HISTORY_LEN > ${KB_HISTORY_FILENAME}.tmp
+cat ${KB_HISTORY_FILENAME}.tmp > ${KB_HISTORY_FILENAME}
+
 eval "$cmd"
-# Only keep the last unique 10 commands in KB_LASTCOMMANDS file
-tac ${KB_LASTCOMMANDS} | uniq -u | head -50 > ${KB_LASTCOMMANDS}.tmp
-cat ${KB_LASTCOMMANDS}.tmp > ${KB_LASTCOMMANDS}
-echo "[+] $(cat ${KB_LASTCOMMANDS} | wc -l) last commands available in ${KB_LASTCOMMANDS}"

@@ -162,7 +162,7 @@ delete          Delete resources by file names, stdin, resources and names, or b
 
     if [[ ${action} == "logs" ]]; then
         if [[ -n ${NS} ]]; then
-            cmd="kubectl logs ${NAME} -n ${NS}"
+            cmd="kubectl logs ${NAME} -n ${NS} --follow"
         else
             cmd="kubectl logs ${NAME}"
         fi
@@ -177,11 +177,6 @@ fi
 
 if [[ "$#" -gt 0 ]]; then
     echo "[+] command history is stored in ${KB_HISTORY_FILENAME}. Run $0 without arguments to select an old command."
-fi
-
-# most of the times I want --follow in logs
-if [[ ${action} == "logs" ]]; then
-    cmd="${cmd} --follow"
 fi
 
 echo -e "[+] command will be: \e[4m$cmd\e[0m"

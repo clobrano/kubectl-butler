@@ -151,8 +151,9 @@ else
 logs            Print the logs for a container in a pod
 describe        Show details of a specific resource or group of resources
 edit            Edit a resource on the server
-explain         Get documentation for a resource
 delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
+exec            Execute a command in a container
+port-forward    Forward one or more local ports to a pod (default port ${DEFAULT_PORT_FORWARD})
 "
 
     # Select the action via FZF
@@ -169,7 +170,11 @@ delete          Delete resources by file names, stdin, resources and names, or b
         fi
     else
         if [[ -n ${NS} ]]; then
-            cmd="kubectl ${action} ${kind} ${NAME} -n ${NS}"
+            if [[ ${action} == "port-forward" ]]; then
+                cmd="oc ${action} pod/${NAME} -n ${NS} ${DEFAULT_PORT_FORWARD}"
+            else
+                cmd="kubectl ${action} ${kind} ${NAME} -n ${NS}"
+            fi
         else
             cmd="kubectl ${action} ${kind} ${NAME}"
         fi

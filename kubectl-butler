@@ -149,6 +149,7 @@ else
     # supported kubectl actions (do not change indentation)
     supported_actions="get             Display one or many resources
 logs            Print the logs for a container in a pod
+follow          Like logs, but with additional --follow argument
 describe        Show details of a specific resource or group of resources
 edit            Edit a resource on the server
 delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
@@ -162,11 +163,14 @@ port-forward    Forward one or more local ports to a pod (default port ${DEFAULT
             --layout=reverse --height=70% \
             --border | awk '{ print $1 }')
 
-    if [[ ${action} == "logs" ]]; then
+    if [[ ${action} =~ "logs" ]]; then
         if [[ -n ${NS} ]]; then
-            cmd="kubectl logs ${NAME} -n ${NS} --follow"
+            cmd="kubectl logs ${NAME} -n ${NS}"
         else
             cmd="kubectl logs ${NAME}"
+        fi
+        if [[ ${action} =~ "follow" ]]; then
+            cmd="${cmd} --follow"
         fi
     else
         if [[ -n ${NS} ]]; then

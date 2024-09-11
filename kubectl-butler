@@ -75,6 +75,18 @@ KB_HISTORY_FILENAME=$HOME/.kb.lastcommands
 KB_HISTORY_LEN=${KB_HISTORY_LEN:-30}
 DEFAULT_PORT_FORWARD=${DEFAULT_PORT_FORWARD:-40000}
 
+# supported kubectl actions (do not change indentation).
+SUPPORTED_ACTIONS="get             Display one or many resources
+get YAML        Get in YAML format (-o yaml)
+logs            Print the logs for a container in a pod
+logs follow     Like logs, but with additional --follow argument
+describe        Show details of a specific resource or group of resources
+edit            Edit a resource on the server
+delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
+exec            Execute a command in a container
+port-forward    Forward one or more local ports to a pod (default port ${DEFAULT_PORT_FORWARD})
+"
+
 if [[ -n ${_clean} ]]; then
     echo > ${KB_HISTORY_FILENAME}
     exit 0
@@ -146,22 +158,13 @@ else
         fi
     fi
 
-    # supported kubectl actions (do not change indentation)
-    supported_actions="get             Display one or many resources
-logs            Print the logs for a container in a pod
-follow          Like logs, but with additional --follow argument
-describe        Show details of a specific resource or group of resources
-edit            Edit a resource on the server
-delete          Delete resources by file names, stdin, resources and names, or by resources and label selector
-exec            Execute a command in a container
-port-forward    Forward one or more local ports to a pod (default port ${DEFAULT_PORT_FORWARD})
-"
-
     # Select the action via FZF
-    action=$(echo "${supported_actions}" | \
+    selection=$(echo "${SUPPORTED_ACTIONS}" | \
         fzf --prompt "Select the action: " \
             --layout=reverse --height=70% \
-            --border | awk '{ print $1 }')
+            --border)
+
+    action=$(echo $selection | awk '{ print $1 }')
 
     if [[ ${action} =~ "logs" ]]; then
         if [[ -n ${NS} ]]; then
@@ -169,7 +172,7 @@ port-forward    Forward one or more local ports to a pod (default port ${DEFAULT
         else
             cmd="kubectl logs ${NAME}"
         fi
-        if [[ ${action} =~ "follow" ]]; then
+        if [[ ${selection} =~ "follow" ]]; then
             cmd="${cmd} --follow"
         fi
     else
@@ -181,6 +184,9 @@ port-forward    Forward one or more local ports to a pod (default port ${DEFAULT
             fi
         else
             cmd="kubectl ${action} ${kind} ${NAME}"
+        fi
+        if [[ ${selection} =~ "YAML" ]]; then
+            cmd="${cmd} -o yaml"
         fi
     fi
 fi
